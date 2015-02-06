@@ -11,7 +11,7 @@ For the rules, I took my cues from the Bus Pass example in the JBPM project:
 
 https://github.com/droolsjbpm/drools/tree/master/drools-examples/src/main/java/org/drools/examples/buspass
 
-However, I have cut the rules down a little bit and cut down some of the code by switching from Java classes to DRL declared fact types, where those facts are only used internally in the rules.
+I have cut the rules down a little bit and reduced the code by replacing some of the Java fact classes with DRL declared types. I prefer this for facts which are only referenced from within the DRL.
 
 Assuming that you have a reasonably recent install of Maven and the JDK (I have tested with 8, but I think 7 should be okay), you should be able to do the following from the command line.
 
@@ -23,7 +23,7 @@ Run the application:
 
     java -jar target/buspass-ws-1.0.0-SNAPSHOT.jar
 
-And then send a request to the API using curl or your favourite web browser. As described by the rules, if you request a bus pass for a person with age less than 16, you should see a ChildBusPass and for someone 16 or over, you should get an AdultBusPass.
+Then send a request to the API using curl or your favourite web browser. As described by the rules, if you request a bus pass for a person with age less than 16, you should see a ChildBusPass and for someone 16 or over, you should see an AdultBusPass.
 
 For example, opening http://127.0.0.1:8080/buspass?name=Steve&age=15 gives me:
     
