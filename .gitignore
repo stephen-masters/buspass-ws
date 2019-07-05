@@ -11,3 +11,4 @@
 *.settings
 
 *.idea
+target/
