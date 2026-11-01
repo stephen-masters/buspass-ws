@@ -1,2 +1,3 @@
 logging:
-    level: DEBUG
+  level:
+    com.sctrcd.buspassws: DEBUG
