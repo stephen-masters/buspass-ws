@@ -1,7 +1,6 @@
 package com.sctrcd.buspassws;
 
 import java.util.Arrays;
-
 import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.slf4j.Logger;
@@ -19,31 +18,30 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class BusPassApp {
 
-	private static Logger log = LoggerFactory.getLogger(BusPassApp.class);
+    private static final Logger log = LoggerFactory.getLogger(BusPassApp.class);
 
     public static void main(String[] args) {
-        ApplicationContext ctx = SpringApplication.run(BusPassApp.class, args); 
+        ApplicationContext ctx = SpringApplication.run(BusPassApp.class, args);
 
         String[] beanNames = ctx.getBeanDefinitionNames();
         Arrays.sort(beanNames);
 
         StringBuilder sb = new StringBuilder("Application beans:\n");
         for (String beanName : beanNames) {
-            sb.append(beanName + "\n");
+            sb.append(beanName).append('\n');
         }
         log.info(sb.toString());
     }
-    
+
     /**
      * By defining the {@link KieContainer} as a bean here, we ensure that
      * Drools will hunt out the kmodule.xml and rules on application startup.
      * Those can be found in <code>src/main/resources</code>.
-     * 
+     *
      * @return The {@link KieContainer}.
      */
-    @Bean
+    @Bean(destroyMethod = "dispose")
     public KieContainer kieContainer() {
         return KieServices.Factory.get().getKieClasspathContainer();
     }
-
 }

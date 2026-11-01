@@ -1,35 +1,52 @@
-buspass-ws
-===
+Bus pass web service
+====================
 
-An experiment in creating a minimal Drools web service using Spring Boot.
+A minimal Drools web service on Spring Boot. It does nothing more than expose a set of Drools
+rules as an HTTP API, so that the essentials of running Drools inside a Spring Boot application
+are easy to pick out.
 
-A little while back, I knocked up Qzr (https://github.com/gratiartis/qzr) to demonstrate using Spring Boot (http://projects.spring.io/spring-boot/) with the Drools rules engine (http://www.drools.org/). However, I also wanted to play around with a few more technologies (AngularJS and Spring HATEOAS), so it's a bit large for just demonstrating exposing Drools rules as an HTTP web service.
+I wrote it after [Qzr](https://github.com/stephen-masters/qzr), which showed Spring Boot with Drools but
+also brought in AngularJS and Spring HATEOAS, and was a bit much for someone who only wanted to
+see the rules engine behind a web service. The rules take their cue from the
+[bus pass example](https://github.com/apache/incubator-kie/tree/main/drools-examples/src/main/java/org/drools/examples/buspass)
+in the Drools project, cut down a little, with the facts that only the rules refer to replaced by
+DRL declared types.
 
-A few folks have mentioned that there was a bit too much going on for a beginner to pick out the essentials of running Drools in a Spring Boot application. So I thought I'd have a go at creating a simpler application, which does nothing more than that.
+| Piece | Where | What it does |
+|---|---|---|
+| Rules | `src/main/resources/com/sctrcd/buspassws/rules/BusPass.drl` | Under 16 gets a `ChildBusPass`, 16 and over an `AdultBusPass` |
+| Knowledge base | `src/main/resources/META-INF/kmodule.xml` | Declares `BusPassKbase` and the `BusPassSession` session |
+| Container | `BusPassApp` | The `KieClasspathContainer` as a Spring bean |
+| Service | `BusPassService` | A new session per request: insert the person, fire the rules, find the pass |
+| Controller | `BusPassController` | `GET /buspass?name=…&age=…` |
 
-For the rules, I took my cues from the Bus Pass example in the JBPM project:
+It needs Java 25 and uses Spring Boot 4 with Drools 10. The Maven wrapper downloads Maven itself,
+so to run a full build, including the format check and the tests:
 
-https://github.com/droolsjbpm/drools/tree/master/drools-examples/src/main/java/org/drools/examples/buspass
-
-I have cut the rules down a little bit and reduced the code by replacing some of the Java fact classes with DRL declared types. I prefer this for facts which are only referenced from within the DRL.
-
-Assuming that you have a reasonably recent install of Maven and the JDK (I have tested with 8, but I think 7 should be okay), you should be able to do the following from the command line.
-
-Build the application:
-
-    mvn clean package
+    ./mvnw clean verify
 
 Run the application:
 
     java -jar target/buspass-ws-1.0.0-SNAPSHOT.jar
 
-Then send a request to the API using curl or your favourite web browser. As described by the rules, if you request a bus pass for a person with age less than 16, you should see a ChildBusPass and for someone 16 or over, you should see an AdultBusPass.
+Then send a request with curl or a browser. Opening
+<http://127.0.0.1:8080/buspass?name=Steve&age=15> gives:
 
-For example, opening http://127.0.0.1:8080/buspass?name=Steve&age=15 gives me:
-    
     {"person":{"name":"Steve","age":15},"busPassType":"ChildBusPass"}
-    
-... and opening http://127.0.0.1:8080/buspass?name=Steve&age=16 gives me:
-    
+
+and <http://127.0.0.1:8080/buspass?name=Steve&age=16> gives:
+
     {"person":{"name":"Steve","age":16},"busPassType":"AdultBusPass"}
 
+A request without `name` or `age`, or with an age that is not a whole number, gets a
+`400 Bad Request`. Spring Boot Actuator's health check is at <http://127.0.0.1:8080/actuator/health>.
+
+If the format check fails, `./mvnw spotless:apply` fixes it. To install the git hooks, which
+check formatting before each commit and run the build before each push:
+
+    lefthook install
+
+See [AGENTS.md](AGENTS.md) for the conventions and [SECURITY.md](SECURITY.md) for reporting a
+vulnerability.
+
+Licensed under the [Apache License, Version 2.0](LICENSE).

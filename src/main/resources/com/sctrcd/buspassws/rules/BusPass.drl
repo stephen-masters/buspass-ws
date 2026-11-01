@@ -1,4 +1,4 @@
-package com.sctrcd.busspassws.rules
+package com.sctrcd.buspassws.rules
 
 import com.sctrcd.buspassws.facts.*;
 

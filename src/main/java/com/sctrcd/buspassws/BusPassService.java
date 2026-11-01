@@ -1,29 +1,24 @@
 package com.sctrcd.buspassws;
 
+import com.sctrcd.buspassws.facts.BusPass;
+import com.sctrcd.buspassws.facts.Person;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.ObjectFilter;
 import org.kie.api.runtime.rule.FactHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.sctrcd.buspassws.facts.BusPass;
-import com.sctrcd.buspassws.facts.Person;
 
 @Service
 public class BusPassService {
 
-    private static Logger log = LoggerFactory.getLogger(BusPassService.class);
+    private static final Logger log = LoggerFactory.getLogger(BusPassService.class);
 
     private final KieContainer kieContainer;
 
-    @Autowired
     public BusPassService(KieContainer kieContainer) {
         log.info("Initialising a new bus pass session.");
         this.kieContainer = kieContainer;
@@ -35,54 +30,47 @@ public class BusPassService {
      */
     public BusPass getBusPass(Person person) {
         KieSession kieSession = kieContainer.newKieSession("BusPassSession");
-        kieSession.insert(person);
-        kieSession.fireAllRules();
-        BusPass busPass = findBusPass(kieSession);
-        kieSession.dispose();
-        return busPass;
+        try {
+            kieSession.insert(person);
+            kieSession.fireAllRules();
+            return findBusPass(kieSession);
+        } finally {
+            kieSession.dispose();
+        }
     }
-    
+
     /**
      * Search the {@link KieSession} for bus passes.
      */
     private BusPass findBusPass(KieSession kieSession) {
-        
+
         // Find all BusPass facts and 1st generation child classes of BusPass.
-        ObjectFilter busPassFilter = new ObjectFilter() {
-            @Override
-            public boolean accept(Object object) {
-                if (BusPass.class.equals(object.getClass())) return true;
-                if (BusPass.class.equals(object.getClass().getSuperclass())) return true;
-                return false;
-            }
-        };
+        ObjectFilter busPassFilter = object -> BusPass.class.equals(object.getClass())
+                || BusPass.class.equals(object.getClass().getSuperclass());
 
         // printFactsMessage(kieSession);
-        
-        List<BusPass> facts = new ArrayList<BusPass>();
+
+        List<BusPass> facts = new ArrayList<>();
         for (FactHandle handle : kieSession.getFactHandles(busPassFilter)) {
             facts.add((BusPass) kieSession.getObject(handle));
         }
-        if (facts.size() == 0) {
+        if (facts.isEmpty()) {
             return null;
         }
-        // Assumes that the rules will always be generating a single bus pass. 
+        // Assumes that the rules will always be generating a single bus pass.
         return facts.get(0);
     }
-    
+
     /**
      * Print out details of all facts in working memory.
      * Handy for debugging.
      */
     @SuppressWarnings("unused")
     private void printFactsMessage(KieSession kieSession) {
-        Collection<FactHandle> allHandles = kieSession.getFactHandles();
-        
-        String msg = "\nAll facts:\n";
-        for (FactHandle handle : allHandles) {
-            msg += "    " + kieSession.getObject(handle) + "\n";
+        StringBuilder msg = new StringBuilder("\nAll facts:\n");
+        for (FactHandle handle : kieSession.getFactHandles()) {
+            msg.append("    ").append(kieSession.getObject(handle)).append('\n');
         }
-        System.out.println(msg);
+        log.debug(msg.toString());
     }
-
 }
