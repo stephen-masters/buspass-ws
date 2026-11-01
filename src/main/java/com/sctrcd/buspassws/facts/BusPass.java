@@ -19,7 +19,7 @@ public class BusPass {
     public String getBusPassType() {
         return this.getClass().getSimpleName();
     }
-    
+
     @Override
     public String toString() {
         return "BusPass: { person=" + person + " }";
@@ -27,8 +27,12 @@ public class BusPass {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         BusPass that = (BusPass) o;
         return this.person.equals(that.person);
     }
